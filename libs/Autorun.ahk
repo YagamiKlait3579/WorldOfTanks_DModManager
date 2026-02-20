@@ -30,5 +30,4 @@ Return
 ;;;;;;;;;; Scripts ;;;;;;;;;;
     Main() {
         global
-
     }
