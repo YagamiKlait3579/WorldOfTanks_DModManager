@@ -1,4 +1,7 @@
 libs/CoreLibsFor_AHK/Resources/CoreSettings.ini
 libs/Downloads/*
+!libs/Downloads/.gitkeep
 Additional mods/mods/*
+!Additional mods/mods/.gitkeep
 Additional mods/res_mods/*
+!Additional mods/res_mods/.gitkeep
