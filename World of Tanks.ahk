@@ -318,7 +318,7 @@ ExitApp
         }
     }
     
-;;;;;;;;;; Copy Mods ;;;;;;;;;;
+;;;;;;;;;; Additional mods ;;;;;;;;;;
     CopyAllMods(SourceFolder, DestFolder) {
         ; Создаем папку назначения если не существует
         if !FileExist(DestFolder)

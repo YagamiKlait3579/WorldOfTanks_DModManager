@@ -2,8 +2,9 @@
     OnExit("BeforeExiting")
 
 ;;;;;;;;;; Variables ;;;;;;;;;;
-    global CSV_TimeStamp
+    global DMod_TimeStamp, DModTexture_TimeStamp
     settingTreeMain := [], settingTreeHeadlines := [], settingTreeList := []
+    soloFlag := [[False, True, True, False, False, True], [False, True, False]]
     ;--------------------------------------------------
     textTreeMain  := ["D Mod", "D Mod Texture Mods"]
     ;--------------------------------------------------
@@ -29,21 +30,10 @@
     textTreeList[2,3] := ["Дым и пламя от выстрелов", "Дым и пламя из выхлопных труб", "Дым от уничтоженных танков", "Облака", "Тень под танком"
                          ,"Эффекты взрывов снарядов и попадания в объекты", "Эффекты попадания по танкам", "Эффекты уничтожения танков"]
     ;--------------------------------------------------
-    DMod_BaseURL         := "https://draug.ru/dmod/D%20Mod%20v.1.0.exe"
-    DMod_BaseName        := "D Mod "
-    DModTexture_BaseURL  := "https://draug.ru/dmod/D%20Mod%20Texture%20Mods%20v.1.0.exe"
-    DModTexture_BaseName := "D Mod Texture "
-    ;--------------------------------------------------
     SettingsUploading()
     CheckVersion()
 
 ;;;;;;;;;; Additional functions ;;;;;;;;;;
-    fMouseClick(x, y, t = 25) {
-        fSetCursor(x, y)
-        lSleep(t)
-        fMouseInput("Left")
-    }
-
     SettingsUploading() {
         global
         local FilePath, aVar
@@ -63,6 +53,10 @@
         }
         IniRead, aVar, %FilePath%, Main Settings, GameFolder
         GameFolder := (!FileExist(aVar) ? " Не указана" : aVar)
+        IniRead, CB1, %FilePath%, Main Settings, CB1, 0
+        IniRead, CB2, %FilePath%, Main Settings, CB2, 0
+        IniRead, UserDownloadFolder, %FilePath%, Main Settings, UserDownloadFolder, %A_Space%
+        ;--------------------------------------------------
         IniRead, vDModInServer, %FilePath%, Main Settings, vDModInServer, %A_Space%
         IniRead, vDModTextureInServer, %FilePath%, Main Settings, vDModTextureInServer, %A_Space%
         ; LWR = last working link
@@ -70,14 +64,18 @@
         IniRead, vDModTexture_LWR, %FilePath%, Main Settings, vDModTexture_LWR, %A_Space%
         IniRead, vDModInGame, %FilePath%, Main Settings, vDModInGame, %A_Space%
         IniRead, vGame, %FilePath%, Main Settings, vGame, %A_Space%
-        IniRead, CSV_TimeStamp, %FilePath%, Main Settings, CSV_TimeStamp, 1        
+        ;--------------------------------------------------
+        IniRead, DMod_TimeStamp, %FilePath%, Main Settings, DMod_TimeStamp, 1
+        IniRead, DModTexture_TimeStamp, %FilePath%, Main Settings, DModTexture_TimeStamp, 1  
+        ;--------------------------------------------------
+        IniRead, LaunchModifier, %FilePath%, Installer, LaunchModifier, Menu
     } 
     
 ;;;;;;;;;; Checking versions ;;;;;;;;;; 
-    CheckVersion(task = "All") {
+    CheckVersion(task = "All", GUI_report = "") {
         global
         local A_Loop, A_Key
-        if (task = "All" || task = "Server" || task = "Downloads") {
+        if ((task = "All" || task = "Server" || task = "Downloads") && !GUI_report) {
             local PlaceForTheText := "Text text text text text text text text text text text text"
             UpdateDGP({"Transparency" : 100, "Blur" : 255, "FontSize" : 25, "BorderColor" : "ff5100", "BorderSize" : 2})
             GuiInGame("Start", "CheckVersion")
@@ -85,21 +83,22 @@
                 GuiControl, CheckVersion: Text, T1, World of Tanks : DMod manager
                 Gui, CheckVersion: Add, Text, xm y+m +Center vStatusGUI, %PlaceForTheText%
                 GuiControl, CheckVersion: Text, StatusGUI,
-            GuiInGame("End", "CheckVersion", {"pos" : ["center", (A_ScreenHeight / 5)]})
+            GuiInGame("End", "CheckVersion", {"pos" : ["center", (A_ScreenHeight / 7)]})
         }
         ; Проверка версии модов на сервере
         if (task = "All" || task = "Server") {
-            GuiInGame("Edit", "CheckVersion", {"id" : "StatusGUI", "Text" : "Проверка версии модов на сервере"})
-            local serverChecks, result
-            serverChecks := []
-            serverChecks[1] := { "url": vDMod_LWR ? vDMod_LWR : DMod_BaseURL
+            GuiInGame("Edit", (GUI_report ? GUI_report : "CheckVersion"), {"id" : "StatusGUI", "Text" : "Проверка версии модов на сервере"})
+            local result, serverChecks := []
+            serverChecks[1] := { "url": vDMod_LWR ? vDMod_LWR : "https://draug.ru/dmod/D%20Mod%20v.1.0.exe"
+                               , "stampName": "DMod_TimeStamp"
                                , "linkVar": "vDMod_LWR"
                                , "versionVar": "vDModInServer" }
-            serverChecks[2] := { "url": vDModTexture_LWR ? vDModTexture_LWR : DModTexture_BaseURL
+            serverChecks[2] := { "url": vDModTexture_LWR ? vDModTexture_LWR : "https://draug.ru/dmod/D%20Mod%20Texture%20Mods%20v.1.0.exe"
+                               , "stampName": "DModTexture_TimeStamp"
                                , "linkVar": "vDModTexture_LWR"
                                , "versionVar": "vDModTextureInServer" }                 
             for A_Loop, A_Key in serverChecks {
-                result := CheckServerVersion(A_Key.url)
+                result := CheckServerVersion(A_Key.url, A_Key.stampName, CSV_timeout)
                 if (result != "timeout") {
                     linkVar := A_Key.linkVar
                     %linkVar% := (result.Link ? result.Link : "")
@@ -110,19 +109,34 @@
         }
         ; Проверка установщика в скрипте
         if (task = "All" || task = "Downloads") {
-            GuiInGame("Edit", "CheckVersion", {"id" : "StatusGUI", "Text" : "Проверка установщика в скрипте"})
-
-            Loop, Files, % A_Scriptdir . "\" . FileNamePattern . " v.*.exe"
-            {
-                ; Извлекаем версию из имени файла
-                if (RegExMatch(A_LoopFileName, "v\.(\d+\.\d+)", FileVersionMatch)) {
-                    FileVersion := FileVersionMatch1
-
-                    ; Сравниваем версии
-                    if ((FileVersion = LinkVersion) && !FoundCurrentVersion)
-                        FoundCurrentVersion := true
-                    else 
-                        FileDelete, %A_LoopFileFullPath%
+            local downloads := []
+            downloads[1] := { "linkVar": vDMod_LWR
+                            , "serverVer": vDModInServer
+                            , "fileMask": "D Mod v.*.exe"
+                            , "fileName": "D Mod "
+                            , "type": "Mod" }               
+            downloads[2] := { "linkVar": vDModTexture_LWR
+                            , "serverVer": vDModTextureInServer
+                            , "fileMask": "D Mod Texture v.*.exe"
+                            , "fileName": "D Mod Texture "
+                            , "type": "Texture" }
+            for A_Loop, A_Key in downloads {
+                GuiInGame("Edit", (GUI_report ? GUI_report : "CheckVersion"), {"id" : "StatusGUI", "Text" : "Проверка версии " A_Key.fileName " в скрипте"})
+                if !A_Key.linkVar
+                    continue
+                FoundCurrentVersion := false
+                Loop, Files, % A_WorkingDir . "\libs\Downloads\" . A_Key.fileMask
+                {
+                    if RegExMatch(A_LoopFileName, "v\.(\d+\.\d+)", FileVersionMatch) 
+                        if (A_Key.serverVer = FileVersionMatch && !FoundCurrentVersion)
+                            FoundCurrentVersion := true
+                        else
+                            FileDelete, %A_LoopFileFullPath%
+                }
+                if !FoundCurrentVersion {
+                    downloadPath := A_WorkingDir . "\libs\Downloads\" . A_Key.fileName . A_Key.serverVer . ".exe"
+                    GuiInGame("Edit", (GUI_report ? GUI_report : "CheckVersion"), {"id" : "StatusGUI", "Text" : "Загрузка нового " A_Key.fileName})
+                    DownloadFile(A_Key.linkVar, downloadPath)
                 }
             }
         }
@@ -131,14 +145,14 @@
             local fileChecks, fileContent, versionVar
             Loop, 2 {
                 if (GameFolder = " Не указана") {
-                    vGame := vDModInGame := "Укажите папку с игрой"
+                    vGame := vDModInGame := "ERROR: 1"
                     Break
                 }
                 switch A_Index {
                     case 1: 
                         fileChecks := { "path"        : GameFolder . "\version.xml"
                                       , "versionVar"  : "vGame"
-                                      , "regex"       : "<version>\s*(v\.\d+\.\d+\.\d+\.\d+)"
+                                      , "regex"       : "<version>\s*v\.(\d+\.\d+\.\d+\.\d+)"
                                       , "errorPrefix" : "vGame" }       
                     case 2: 
                         fileChecks := { "path"        : GameFolder . "\res_mods\" . StrReplace(vGame, "v.") . "\scripts\client\gui\mods\mod_dmodupdater.json"
@@ -159,21 +173,22 @@
                 }
                 if RegExMatch(fileContent, fileChecks.regex, match) {
                     versionVar := fileChecks.versionVar
-                    %versionVar% := match1
+                    %versionVar% := "v." match1
                 } else {
                     errorVar := fileChecks.errorPrefix
                     %errorVar% := "ERROR: 3"
                 }
             }
         }
-        GuiInGame("Destroy", "CheckVersion")
+        if !GUI_report
+            GuiInGame("Destroy", "CheckVersion")
     }
 
 ;;;;;;;;;; Internet ;;;;;;;;;; 
-    CheckServerVersion(CurrentLink, maxMajor = 10, maxMinor = 10, timeout = 60) {
-        if (WorldTimePassed(CSV_TimeStamp,, "sec") < timeout)
+    CheckServerVersion(CurrentLink, ByRef TimeStamp, timeout = 60, maxMajor = 10, maxMinor = 10) {
+        if (WorldTimePassed(%TimeStamp%,, "sec") < timeout)
             Return "timeout"
-        WorldTimeStamp(CSV_TimeStamp) ; CSV = Check Server Version
+        WorldTimeStamp(%TimeStamp%)
 
         RegExMatch(CurrentLink, "^(.*v\.)(\d+)\.(\d+)(\.exe)$", Match)
         ; Match1 = BaseURL
@@ -189,7 +204,7 @@
                 NextMinor := (Match3 + A_Index) >= maxMinor ? ((Match3 + A_Index) - maxMinor) : (Match3 + A_Index)
                 NewLink := Match1 . NextMajor . "." . NextMinor . Match4
                 if CheckLink(NewLink) 
-                    Return { "Link" : NewLink, "Version" : NextMajor "." NextMinor}
+                    Return { "Link" : NewLink, "Version" : "v." NextMajor "." NextMinor}
             }
         }
         return ""  ; Не нашли новую версию
@@ -211,18 +226,17 @@
                 return false
         }
         catch {
-            ;MsgBox, 16, World of tanks - Mod manager, Не удалось проверить ссылку %url%
+            ;MsgBox, 16, World of Tanks : DMod manager, Не удалось проверить ссылку %url%
             return false
         }
     }
 
     DownloadFile(url, savePath) {
-        http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+        http := ComObjCreate("MSXML2.XMLHTTP.6.0")
         http.Open("GET", url, false)
         http.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0")
         http.SetRequestHeader("Referer", "https://draug.ru/")
         http.Send()
-        http.WaitForResponse()
         
         if (http.Status = 200) {
             ado := ComObjCreate("ADODB.Stream")
@@ -239,13 +253,13 @@
 ;;;;;;;;;; Exit ;;;;;;;;;;
     BeforeExiting() {
         global
-        local FilePath
-        FilePath := CheckingFiles("File", False, "SavedSettings.ini")
+        local FilePath := CheckingFiles("File", False, "SavedSettings.ini") 
         IniWrite, %vDModInServer%, %FilePath%, Main Settings, vDModInServer
         IniWrite, %vDModTextureInServer%, %FilePath%, Main Settings, vDModTextureInServer
         IniWrite, %vDMod_LWR%, %FilePath%, Main Settings, vDMod_LWR
         IniWrite, %vDModTexture_LWR%, %FilePath%, Main Settings, vDModTexture_LWR
         IniWrite, %vDModInGame%, %FilePath%, Main Settings, vDModInGame
         IniWrite, %vGame%, %FilePath%, Main Settings, vGame
-        IniWrite, %CSV_TimeStamp%, %FilePath%, Main Settings, CSV_TimeStamp
+        IniWrite, %DMod_TimeStamp%, %FilePath%, Main Settings, DMod_TimeStamp
+        IniWrite, %DModTexture_TimeStamp%, %FilePath%, Main Settings, DModTexture_TimeStamp
     }
