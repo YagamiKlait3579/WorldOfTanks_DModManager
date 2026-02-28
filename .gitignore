@@ -1,4 +1,5 @@
 libs/CoreLibsFor_AHK/Resources/CoreSettings.ini
+libs/SavedSettings.ini
 libs/Downloads/*
-Additional mod/mods/*
-Additional mod/res_mods/*
+Additional mods/mods/*
+Additional mods/res_mods/*
