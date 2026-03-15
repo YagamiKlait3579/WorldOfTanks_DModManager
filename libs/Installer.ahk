@@ -93,10 +93,13 @@ ExitApp
     Installer(param = "Menu") {
         global
         local A_Loop, A_key, B_Loop, B_key, C_Loop, C_key
-        local installerFile := []
+        local x1, y1, x2, y2, x3, y3
+        local aPid := [], installerFile := [], coords := []
         local ErrorList := "Не удалось найти следующие моды:"
         installerFile[1] := A_WorkingDir . "\libs\Downloads\D Mod "  . vDModInServer . ".exe"
         installerFile[2] := A_WorkingDir . "\libs\Downloads\D Mod Texture " . vDModTextureInServer . ".exe"
+        aPid[1] := "D Mod " vDModInServer . ".tmp"
+        aPid[2] := "D Mod Texture " vDModTextureInServer . ".tmp"
         CheckVersion()
         for A_Loop, A_key in installerFile
             if !FileExist(A_key) && settingTreeMain[A_Loop] {
@@ -118,27 +121,42 @@ ExitApp
                                     ,["Next", "Install", "Info2", "Complete"]]
         for A_Loop, A_key in settingTreeMain {
             if A_key {
+                x1 := "", y1 := "", x2 := "", y2 := "", x3 := "", y3 := ""
                 GuiInGame("Edit", "Installer", {"id" : "StatusGUI", "Text" : "Установка " (A_Loop = 1 ? "D Mod" : "D Mod Texture")})
-                Run, % """" installerFile[A_Loop] """" 
-                for B_Loop, B_key in procedureOfActions[A_Loop] 
-                    if !SearchAndClick(B_key, "Wait", SaC_timeout) {
+                Run, % """" installerFile[A_Loop] """"
+                WinWait, % "ahk_exe " aPid[A_Loop]
+                WinSet, AlwaysOnTop, 0, % "ahk_exe " aPid[A_Loop]
+                WinSet, AlwaysOnTop, 1, % "ahk_exe " aPid[A_Loop]
+                WinGetPos, x1, y1, x2, y2, % "ahk_exe " aPid[A_Loop]
+                for B_Loop, B_key in procedureOfActions[A_Loop] {
+                    if (B_Loop = 2) {
+                        x3 := x2, y3 := y2
+                        Loop, {
+                            lSleep(100)
+                            WinGetPos, x1, y1, x2, y2, % "ahk_exe " aPid[A_Loop]
+                        } Until (((x3 != x2) && (y3 != y2)) && x2 && y2)
+                    }
+                    if !SearchAndClick(B_key, "Wait", SaC_timeout, [x1, y1, x1+x2, y1+y2]) {
                         MsgBox, 16, World of Tanks : DMod manager, Ошибка установщика! `nУстановка модов будет отменена.
+                        Process, Close, % "ahk_exe " aPid[A_Loop]
                         ExitApp
                     }
+                }
                 for B_Loop, B_key in settingTreeHeadlines[A_Loop] {
                     if (B_key && !soloFlag[A_Loop, B_Loop]) {
-                        if !SearchAndClick(A_Loop "-" B_Loop "-MAIN", "scrolling", SaC_scroll)
+                        if !SearchAndClick(A_Loop "-" B_Loop "-MAIN", "scrolling", SaC_scroll, [x1, y1, x1+x2, y1+y2])
                             ErrorList .= "`n" textTreeHeadlines[A_Loop, B_Loop] " (вся ветка)"
                     } else {
                         for C_Loop, C_key in settingTreeList[A_Loop, B_Loop]
                             if C_key
-                                if !SearchAndClick(A_Loop "-" B_Loop "-" C_Loop, "scrolling", SaC_scroll)
+                                if !SearchAndClick(A_Loop "-" B_Loop "-" C_Loop, "scrolling", SaC_scroll, [x1, y1, x1+x2, y1+y2])
                                     ErrorList .= "`n" textTreeList[A_Loop, B_Loop, C_Loop]
                     }
                 }
                 for B_Loop, B_key in procedureOfActions[A_Loop + 2]
-                    if !SearchAndClick(B_key, "Wait", SaC_timeout * 3) {
+                    if !SearchAndClick(B_key, "Wait", SaC_timeout * 3, [x1, y1, x1+x2, y1+y2]) {
                         MsgBox, 16, World of Tanks : DMod manager, Ошибка установщика! `nУстановка модов будет отменена.
+                        Process, Close, % "ahk_exe " aPid[A_Loop]
                         ExitApp
                     }
             }
@@ -148,7 +166,6 @@ ExitApp
         ; Установка дополнительных модов
         if (CB1 && (GameFolder != " Не указана")) {
             GuiInGame("Edit", "Installer", {"id" : "StatusGUI", "Text" : "Копирование дополнительных модов"})
-
             if !FileExist(A_WorkingDir "\Additional mods\mods") {
                 MsgBox, 16, World of Tanks : DMod manager, Не удалось найти папку mods с дополнительными модами.`nУстановка дополнительных модов будет отменена!
                 ExitApp
@@ -169,7 +186,7 @@ ExitApp
         fMouseInput("Left")
     }
 
-    SearchAndClick(nameKey, param, value) {
+    SearchAndClick(nameKey, param, value, coords) {
         /*
             param = Wait
                 value = время ожидания ключа (сек.)
@@ -178,7 +195,6 @@ ExitApp
          */
         global
         local aX, aY, imageSize, A_Stamp 
-        static coords := [A_ScreenWidth / 4, A_ScreenHeight / 4, (A_ScreenWidth / 4) * 3, (A_ScreenHeight / 4) * 3]
         fSetCursor(gScreenCenter[1], gScreenCenter[2])
         lSleep(25)
         TimeStamp(A_Stamp)

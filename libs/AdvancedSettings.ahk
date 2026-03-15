@@ -13,7 +13,7 @@
     CSV_timeout := 300  ; Ограничение на повторение проверок версии на сервере (сек.)
 
     ; SearchAndClick
-    SaC_shades := 25    ; % отклонения ImageSearch
+    SaC_shades := 50    ; % отклонения ImageSearch
 
 ;;;;;;;;;; Advanced settings ;;;;;;;;;;
     ReloadScriptKey   = Insert    ; Перезагрузка скрипта
