@@ -69,6 +69,9 @@
     SaC_DLL := CheckingFiles("File", False, "WorldOfTanks_Images.dll")
     global ConfigEditorErrors := ""
     global CB2
+    ;--------------------------------------------------
+    SettingsUploading()
+    CheckVersion()
 
 ;;;;;;;;;; Gui ;;;;;;;;;;
     PlaceForTheText := "Text text text text text text text text text text text text"

@@ -6,7 +6,10 @@
     idTreeMain := [], idTreeHeadlines := [], idTreeList := []
     global UserDownloadFolder
     CB3 := ManageStartup(A_WorkingDir "\libs\Autorun.ahk", "check", "DModManager_")
-
+    ;--------------------------------------------------
+    SettingsUploading()
+    CheckVersion()
+    
 ;;;;;;;;;; Gui ;;;;;;;;;;
     ;*** GUI Variables ***
         GUI_Text1 := "E6F1FF"   ; Цвет TreeView
