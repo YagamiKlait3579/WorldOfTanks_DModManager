@@ -20,8 +20,8 @@
 ;;;;;;;;;; Variables ;;;;;;;;;;
     EBR_DLL := CheckingFiles("File", False, "AutopilotEBR_Images.dll")
     imagePath_Mod   := [CreateImage(EBR_DLL, "EBR_Off"), CreateImage(EBR_DLL, "EBR_On")]
-    imagePath_Speed := [CreateImage(EBR_DLL, "Speed3"), CreateImage(EBR_DLL, "Speed2"), CreateImage(EBR_DLL, "Speed1")
-                      , CreateImage(EBR_DLL, "Speed0"), CreateImage(EBR_DLL, "Speed0-1"), CreateImage(EBR_DLL, "Speed-2")]
+    ;imagePath_Speed := [CreateImage(EBR_DLL, "Speed3"), CreateImage(EBR_DLL, "Speed2"), CreateImage(EBR_DLL, "Speed1")
+    ;                  , CreateImage(EBR_DLL, "Speed0"), CreateImage(EBR_DLL, "Speed0-1"), CreateImage(EBR_DLL, "Speed-2")]
     panelCoords := [1, (A_ScreenHeight/4)*3, A_ScreenWidth/8, A_ScreenHeight - 1]
     ;--------------------------------------------------
     A_ScriptStatus := False
@@ -67,7 +67,7 @@ Return
                     if IndicatorChecking(panelCoords, A_key, EBR_shades, 3) {
                         notDeath := True
                 }
-                if !notDeath
+                if (!notDeath && WinActive(PWN))
                     Reload
             }   
         }
@@ -114,6 +114,6 @@ Return
         global
         for A_Loop, A_Key in imagePath_Mod
             FileDelete, %A_Key%
-        for A_Loop, A_Key in imagePath_Speed
-            FileDelete, %A_Key%
+        ;for A_Loop, A_Key in imagePath_Speed
+        ;    FileDelete, %A_Key%
     }

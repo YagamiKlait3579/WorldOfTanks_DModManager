@@ -193,7 +193,7 @@ Return
                 IniWrite, Menu, % CheckingFiles("File", False, "SavedSettings.ini"), Installer, LaunchModifier
                 Run, % """" ProgramSearch("AutoHotkey 1") """ """ A_ScriptDir "\libs\Installer.ahk"""
             }
-            case "Button2",  "Button3": {
+            case "Button2", "Button3": {
                 local A_UserDownloadFolder 
                 FileSelectFolder, A_UserDownloadFolder, *%UserDownloadFolder%, 0, Выберите папку для сохранения.
                 if !ErrorLevel {

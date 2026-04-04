@@ -87,7 +87,7 @@
 ;;;;;;;;;; Start ;;;;;;;;;;
     Installer(LaunchModifier)
     #include %A_Scriptdir%\ConfigEditor.ahk
-    if (ConfigEditorErrors != "" && ConfigEditorErrors != "Ошибки при изменении конфигурационных файлов:")
+    if ((ConfigEditorErrors != "" && ConfigEditorErrors != "Ошибки при изменении конфигурационных файлов:") && copyErrorReport)
         MsgBox, 48, World of Tanks : DMod manager, %ConfigEditorErrors%
 ExitApp
 
@@ -103,10 +103,9 @@ ExitApp
         installerFile[2] := A_WorkingDir . "\libs\Downloads\D Mod Texture " . vDModTextureInServer . ".exe"
         aPid[1] := "D Mod " vDModInServer . ".tmp"
         aPid[2] := "D Mod Texture " vDModTextureInServer . ".tmp"
-        CheckVersion()
         for A_Loop, A_key in installerFile
             if !FileExist(A_key) && settingTreeMain[A_Loop] {
-                MsgBox, 16, World of Tanks : DMod manager, Установойный файл не найден! `nУстановка будет отменена.
+                MsgBox, 16, World of Tanks : DMod manager, Установочный файл не найден! `nУстановка будет отменена.
                 ExitApp
             }
         if (vDModInServer = vDModInGame) {
