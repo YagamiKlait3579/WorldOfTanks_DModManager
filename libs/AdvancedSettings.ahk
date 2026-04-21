@@ -6,14 +6,14 @@
 
 ;;;;;;;;;; Function settings ;;;;;;;;;;
     ; Installer
-    SaC_timeout := 10   ; Время ожидания установщиком ключа (сек.)
+    SaC_timeout := 25   ; Время ожидания установщиком ключа (сек.)
     SaC_scroll  := 60   ; Колличество прокрутов колеса мыши до ошибки (шт.)
 
     ; CheckServerVersion
     CSV_timeout := 300  ; Ограничение на повторение проверок версии на сервере (сек.)
 
     ; SearchAndClick
-    SaC_shades := 50    ; % отклонения ImageSearch
+    SaC_shades := 100    ; % отклонения ImageSearch
 
 ;;;;;;;;;; Advanced settings ;;;;;;;;;;
     ReloadScriptKey   = Insert    ; Перезагрузка скрипта

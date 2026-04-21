@@ -188,37 +188,33 @@
 
 ;;;;;;;;;; Internet ;;;;;;;;;; 
     CheckServerVersion(CurrentLink, ByRef TimeStamp, timeout = 60, maxMajor = 10, maxMinor = 10) {
-        if (WorldTimePassed(%TimeStamp%,, "sec") < timeout)
+        if (WorldTimePassed(TimeStamp,, "sec") < timeout)
             Return "timeout"
-        WorldTimeStamp(%TimeStamp%)
+        WorldTimeStamp(TimeStamp)
 
-        RegExMatch(CurrentLink, "^(.*/)(dmods{0,2}/)(D%20Mod%20v\.)(\d+)\.(\d+)(\.exe)$", Match)
-        ; Match1 = BaseURL (https://draug.ru/)
-        ; Match2 = PathVariant (/dmod/ или /dmods/ или /dmodss/)
-        ; Match3 = FilePrefix (D%20Mod%20v.)
-        ; Match4 = CurrentMajor (мажорная версия)
-        ; Match5 = CurrentMinor (минорная версия)
-        ; Match6 = FileExtension (.exe)
+        RegExMatch(CurrentLink, "^(.*)/dmods{0,2}/([^/]+v\.)(\d+)\.(\d+)(\.exe)$", Match)
+        ; Match1 = https://draug.ru
+        ; Match2 = Имя файла (D%20Mod%20v. или D%20Mod%20Texture%20Mods%20v.)
+        ; Match3 = CurrentMajor
+        ; Match4 = CurrentMinor
+        ; Match5 = .exe
 
-        ; Варианты написания пути, которые будем пробовать
+        ; Всегда пробуем все три варианта пути
         pathVariants := ["/dmod/", "/dmods/", "/dmodss/"]
 
-        ; Ищем в мажорных версиях (сначала в текущей, далее по нарастающей до maxMajor, потом с 1 до текущей)
         Loop, %maxMajor% {
-            NextMajor := (Match4 + (A_Index - 1)) > maxMajor ? ((Match4 + (A_Index - 1)) - maxMajor) : (Match4 + (A_Index - 1))
+            NextMajor := (Match3 + (A_Index - 1)) > maxMajor ? ((Match3 + (A_Index - 1)) - maxMajor) : (Match3 + (A_Index - 1))
             Loop, %maxMinor% {
-                ; Ищем в минорных версиях (сначала в текущей, далее по нарастающей до maxMinor, потом с 1 до текущей)
-                NextMinor := (Match5 + A_Index) >= maxMinor ? ((Match5 + A_Index) - maxMinor) : (Match5 + A_Index)
+                NextMinor := (Match4 + A_Index) >= maxMinor ? ((Match4 + A_Index) - maxMinor) : (Match4 + A_Index)
 
-                ; Пробуем все варианты написания пути для каждой комбинации версий
-                for index, pathVar in pathVariants {
-                    NewLink := Match1 . pathVar . Match3 . NextMajor . "." . NextMinor . Match6
+                for i, pathVar in pathVariants {
+                    NewLink := Match1 . pathVar . Match2 . NextMajor . "." . NextMinor . Match5
                     if CheckLink(NewLink) 
                         Return { "Link" : NewLink, "Version" : "v." NextMajor "." NextMinor}
                 }
             }
         }
-        return ""  ; Не нашли новую версию
+        return ""
     }
 
     CheckLink(url) {

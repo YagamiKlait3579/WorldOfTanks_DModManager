@@ -144,6 +144,7 @@ ExitApp
                         ExitApp
                     }
                 }
+                lSleep(SaC_timeout * 10) ; Для слабого компа Никиша?
                 for B_Loop, B_key in settingTreeHeadlines[A_Loop] {
                     if (B_key && !soloFlag[A_Loop, B_Loop]) {
                         if !SearchAndClick(A_Loop "-" B_Loop "-MAIN", "scrolling", SaC_scroll, [x1, y1, x1+x2, y1+y2])
