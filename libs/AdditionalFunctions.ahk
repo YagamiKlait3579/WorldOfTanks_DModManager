@@ -188,9 +188,9 @@
 
 ;;;;;;;;;; Internet ;;;;;;;;;; 
     CheckServerVersion(CurrentLink, ByRef TimeStamp, timeout = 60, maxMajor = 10, maxMinor = 10) {
-        if (WorldTimePassed(TimeStamp,, "sec") < timeout)
+        if (WorldTimePassed(%TimeStamp%,, "sec") < timeout)
             Return "timeout"
-        WorldTimeStamp(TimeStamp)
+        WorldTimeStamp(%TimeStamp%)
 
         RegExMatch(CurrentLink, "^(.*)/dmods{0,2}/([^/]+v\.)(\d+)\.(\d+)(\.exe)$", Match)
         ; Match1 = https://draug.ru

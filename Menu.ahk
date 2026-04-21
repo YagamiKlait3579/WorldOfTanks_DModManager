@@ -38,7 +38,6 @@
         Gui, ModManager_Menu: Add, Text, % " x+ yp w"T2_H " +Left vvText2 c"GUI_Text3,` %vDModInGame%
         Gui, ModManager_Menu: Add, Text, % " xs y+ w"T1_H " +Right c"GUI_Text2, Версия игры: `
         Gui, ModManager_Menu: Add, Text, % " x+ yp w"T2_H " +Left vvText1 c"GUI_Text3,` %vGame%
-
         ;--------------------------------------------------
         Gui, ModManager_Menu: Add, Text, % " xs y+m w"T1_H " +Section +Right c"GUI_Text2, Папка с игрой:
         Gui, ModManager_Menu: Add, Text, % " x+ ys w"T2_H " +Center c"GUI_Text4 " gGUI_Handler vRGF1", 🛠️ Обзор
