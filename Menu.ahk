@@ -189,6 +189,8 @@ Return
                 Run, % """" (Editor ? Editor : "Notepad.exe") """ """ CheckingFiles("File", False, "ConfigEditor.ahk") """"
             }
             case "Button1" : {
+                BeforeExiting_Menu()
+                BeforeExiting()
                 IniWrite, Menu, % CheckingFiles("File", False, "SavedSettings.ini"), Installer, LaunchModifier
                 Run, % """" ProgramSearch("AutoHotkey 1") """ """ A_ScriptDir "\libs\Installer.ahk"""
             }
