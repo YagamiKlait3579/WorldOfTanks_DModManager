@@ -9,10 +9,11 @@
 ;;;;;;;;;; Setting ;;;;;;;;;;
     StartKey        = SC0x29
     ModKey          = x
-    CC_KeyAdd       = r
-    CC_KeySubtract  = f
+    ;CC_KeyAdd       = r
+    ;CC_KeySubtract  = f
     SettingFPS     := 144
     EBR_shades     := 100    ; % отклонения ImageSearch
+    ;AutoOff        := False 
     ;--------------------------------------------------
     GuiPositionX     := 0.1250    ; Изменение положения интерфейса по горизнтали (X-координата) только для этого скрипта
     GuiPositionY     := 0.9775    ; Изменение положения интерфейса по вертикали (Y-координата) только для этого скрипта
@@ -57,19 +58,23 @@ Return
         KeyStatus := KeyChecking()
         switch KeyStatus {
             case 1 :
-                if !IndicatorChecking(panelCoords, imagePath_Mod[2], EBR_shades)
+                if !IndicatorChecking(panelCoords, imagePath_Mod[2], EBR_shades) {
                     Send, {Blind}{%ModKey%}
+                }
             case 2 :
-                if !IndicatorChecking(panelCoords, imagePath_Mod[1], EBR_shades)
+                if !IndicatorChecking(panelCoords, imagePath_Mod[1], EBR_shades) {
                     Send, {Blind}{%ModKey%}
+                }
+            /* 
             Default: {
                 for A_Loop, A_key in imagePath_Mod 
                     if IndicatorChecking(panelCoords, A_key, EBR_shades, 3) {
                         notDeath := True
                 }
-                if (!notDeath && WinActive(PWN))
-                    Reload
-            }   
+                if (!notDeath && WinActive(PWN) && AutoOff)
+                    Reload 
+            }
+            */
         }
     }
 

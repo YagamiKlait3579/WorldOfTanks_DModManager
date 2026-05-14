@@ -91,11 +91,11 @@
         if (task = "All" || task = "Server") {
             GuiInGame("Edit", (GUI_report ? GUI_report : "CheckVersion"), {"id" : "StatusGUI", "Text" : "Проверка версии модов на сервере"})
             local result, serverChecks := []
-            serverChecks[1] := { "url": vDMod_LWR ? vDMod_LWR : "https://evilmod.ru/dmod/D%20Mod%20v.1.0.exe"
+            serverChecks[1] := { "url": vDMod_LWR ? vDMod_LWR : "https://draug.ru/dmod/D%20Mod%20v.1.0.exe"
                                , "stampName": "DMod_TimeStamp"
                                , "linkVar": "vDMod_LWR"
                                , "versionVar": "vDModInServer" }
-            serverChecks[2] := { "url": vDModTexture_LWR ? vDModTexture_LWR : "https://evilmod.ru/dmod/D%20Mod%20Texture%20Mods%20v.1.0.exe"
+            serverChecks[2] := { "url": vDModTexture_LWR ? vDModTexture_LWR : "https://draug.ru/dmod/D%20Mod%20Texture%20Mods%20v.1.0.exe"
                                , "stampName": "DModTexture_TimeStamp"
                                , "linkVar": "vDModTexture_LWR"
                                , "versionVar": "vDModTextureInServer" }                 
@@ -193,7 +193,7 @@
         WorldTimeStamp(%TimeStamp%)
 
         RegExMatch(CurrentLink, "^(.*)/dmods{0,2}/([^/]+v\.)(\d+)\.(\d+)(\.exe)$", Match)
-        ; Match1 = https://evilmod.ru
+        ; Match1 = https://draug.ru
         ; Match2 = Имя файла (D%20Mod%20v. или D%20Mod%20Texture%20Mods%20v.)
         ; Match3 = CurrentMajor
         ; Match4 = CurrentMinor
@@ -242,7 +242,7 @@
         http := ComObjCreate("MSXML2.XMLHTTP.6.0")
         http.Open("GET", url, false)
         http.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0")
-        http.SetRequestHeader("Referer", "https://evilmod.ru/")
+        http.SetRequestHeader("Referer", "https://draug.ru/")
         http.Send()
         
         if (http.Status = 200) {
