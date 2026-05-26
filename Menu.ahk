@@ -190,7 +190,6 @@ Return
             }
             case "Button1" : {
                 BeforeExiting_Menu()
-                BeforeExiting()
                 IniWrite, Menu, % CheckingFiles("File", False, "SavedSettings.ini"), Installer, LaunchModifier
                 Run, % """" ProgramSearch("AutoHotkey 1") """ """ A_ScriptDir "\libs\Installer.ahk"""
             }
@@ -212,10 +211,10 @@ Return
                     switch A_GuiControl {
                         case "Button2" : 
                             GuiControl, UserDownload: Text, StatusGUI, Загрузка D Mod %vDModInServer%
-                            DownloadFile(vDMod_LWR, UserDownloadFolder "\D Mod " vDModInServer ".exe")
+                            DownloadFile(lDModInServer, UserDownloadFolder "\D Mod " vDModInServer ".exe")
                         case "Button3" : 
                             GuiControl, UserDownload: Text, StatusGUI, Загрузка D Mod Texture %vDModTextureInServer%
-                            DownloadFile(vDModTexture_LWR, UserDownloadFolder "\D Mod Texture " vDModTextureInServer ".exe")
+                            DownloadFile(lDModTextureInServer, UserDownloadFolder "\D Mod Texture " vDModTextureInServer ".exe")
                     }
                     GuiInGame("Destroy", "UserDownload")
                 }

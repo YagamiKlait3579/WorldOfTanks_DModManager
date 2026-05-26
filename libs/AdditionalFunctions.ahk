@@ -1,8 +1,7 @@
 ﻿;;;;;;;;;; Loading ;;;;;;;;;;
-    OnExit("BeforeExiting")
 
 ;;;;;;;;;; Variables ;;;;;;;;;;
-    global DMod_TimeStamp, DModTexture_TimeStamp
+    global vDModInServer, lDModInServer, vDModTextureInServer, lDModTextureInServer
     settingTreeMain := [], settingTreeHeadlines := [], settingTreeList := []
     soloFlag := [[False, True, True, False, False, True], [False, True, False]]
     ;--------------------------------------------------
@@ -38,7 +37,10 @@
         global
         local FilePath, aVar
         local A_Loop, A_key, B_Loop, B_key, C_Loop, C_key
-        FilePath := CheckingFiles("File", False, "SavedSettings.ini")
+        if (!FilePath := CheckingFiles("File", False, "SavedSettings.ini")) {
+            FilePath := A_WorkingDir . "\libs\SavedSettings.ini"
+            FileAppend, , %FilePath%
+        }
         for A_Loop, A_key in textTreeMain {
             IniRead, aVar, %FilePath%, Tree Settings, % "settingTreeMain-" . A_Loop
             settingTreeMain[A_Loop] := (aVar = "ERROR" ? False : aVar)
@@ -56,19 +58,6 @@
         IniRead, CB1, %FilePath%, Main Settings, CB1, 0
         IniRead, CB2, %FilePath%, Main Settings, CB2, 0
         IniRead, UserDownloadFolder, %FilePath%, Main Settings, UserDownloadFolder, %A_Space%
-        ;--------------------------------------------------
-        IniRead, vDModInServer, %FilePath%, Main Settings, vDModInServer, %A_Space%
-        IniRead, vDModTextureInServer, %FilePath%, Main Settings, vDModTextureInServer, %A_Space%
-        ; LWR = last working link
-        IniRead, vDMod_LWR, %FilePath%, Main Settings, vDMod_LWR, %A_Space%
-        IniRead, vDModTexture_LWR, %FilePath%, Main Settings, vDModTexture_LWR, %A_Space%
-        IniRead, vDModInGame, %FilePath%, Main Settings, vDModInGame, %A_Space%
-        IniRead, vGame, %FilePath%, Main Settings, vGame, %A_Space%
-        ;--------------------------------------------------
-        IniRead, DMod_TimeStamp, %FilePath%, Main Settings, DMod_TimeStamp, 1
-        DMod_TimeStamp := DMod_TimeStamp ? DMod_TimeStamp : 1
-        IniRead, DModTexture_TimeStamp, %FilePath%, Main Settings, DModTexture_TimeStamp, 1
-        DModTexture_TimeStamp := DModTexture_TimeStamp ? DModTexture_TimeStamp : 1
         ;--------------------------------------------------
         IniRead, LaunchModifier, %FilePath%, Installer, LaunchModifier, Menu
     } 
@@ -90,34 +79,32 @@
         ; Проверка версии модов на сервере
         if (task = "All" || task = "Server") {
             GuiInGame("Edit", (GUI_report ? GUI_report : "CheckVersion"), {"id" : "StatusGUI", "Text" : "Проверка версии модов на сервере"})
-            local result, serverChecks := []
-            serverChecks[1] := { "url": vDMod_LWR ? vDMod_LWR : "https://draug.ru/dmod/D%20Mod%20v.1.0.exe"
-                               , "stampName": "DMod_TimeStamp"
-                               , "linkVar": "vDMod_LWR"
-                               , "versionVar": "vDModInServer" }
-            serverChecks[2] := { "url": vDModTexture_LWR ? vDModTexture_LWR : "https://draug.ru/dmod/D%20Mod%20Texture%20Mods%20v.1.0.exe"
-                               , "stampName": "DModTexture_TimeStamp"
-                               , "linkVar": "vDModTexture_LWR"
-                               , "versionVar": "vDModTextureInServer" }                 
+            local versionVar, link, result, serverChecks := []
+            serverChecks[1] := { "url": "https://draug.ru/info_sky.html"
+                               , "versionVar": "vDModInServer" 
+                               , "Link": "lDModInServer" }
+            serverChecks[2] := { "url": "https://draug.ru/texture_pack.html"
+                               , "versionVar": "vDModTextureInServer"
+                               , "Link": "lDModTextureInServer" }                 
             for A_Loop, A_Key in serverChecks {
-                result := CheckServerVersion(A_Key.url, A_Key.stampName, CSV_timeout)
-                if (result != "timeout") {
-                    linkVar := A_Key.linkVar
-                    %linkVar% := (result.Link ? result.Link : "")
+                result := CheckServerVersion(A_Key.url)
+                if (result != "") {
                     versionVar := A_Key.versionVar
                     %versionVar% := (result.Version ? result.Version : "ERROR 1")
+                    link := A_Key.link
+                    %link% := (result.link ? result.link : "ERROR")
                 }
             }
         }
         ; Проверка установщика в скрипте
         if (task = "All" || task = "Downloads") {
             local downloads := []
-            downloads[1] := { "linkVar": vDMod_LWR
+            downloads[1] := { "linkVar": lDModInServer
                             , "serverVer": vDModInServer
                             , "fileMask": "D Mod v.*.exe"
                             , "fileName": "D Mod "
                             , "type": "Mod" }               
-            downloads[2] := { "linkVar": vDModTexture_LWR
+            downloads[2] := { "linkVar": lDModTextureInServer
                             , "serverVer": vDModTextureInServer
                             , "fileMask": "D Mod Texture v.*.exe"
                             , "fileName": "D Mod Texture "
@@ -187,55 +174,30 @@
     }
 
 ;;;;;;;;;; Internet ;;;;;;;;;; 
-    CheckServerVersion(CurrentLink, ByRef TimeStamp, timeout = 60, maxMajor = 10, maxMinor = 10) {
-        if (WorldTimePassed(%TimeStamp%,, "sec") < timeout)
-            Return "timeout"
-        WorldTimeStamp(%TimeStamp%)
-
-        RegExMatch(CurrentLink, "^(.*)/dmods{0,2}/([^/]+v\.)(\d+)\.(\d+)(\.exe)$", Match)
-        ; Match1 = https://draug.ru
-        ; Match2 = Имя файла (D%20Mod%20v. или D%20Mod%20Texture%20Mods%20v.)
-        ; Match3 = CurrentMajor
-        ; Match4 = CurrentMinor
-        ; Match5 = .exe
-
-        ; Всегда пробуем все три варианта пути
-        pathVariants := ["/dmod/", "/dmods/", "/dmodss/"]
-
-        Loop, %maxMajor% {
-            NextMajor := (Match3 + (A_Index - 1)) > maxMajor ? ((Match3 + (A_Index - 1)) - maxMajor) : (Match3 + (A_Index - 1))
-            Loop, %maxMinor% {
-                NextMinor := (Match4 + A_Index) >= maxMinor ? ((Match4 + A_Index) - maxMinor) : (Match4 + A_Index)
-
-                for i, pathVar in pathVariants {
-                    NewLink := Match1 . pathVar . Match2 . NextMajor . "." . NextMinor . Match5
-                    if CheckLink(NewLink) 
-                        Return { "Link" : NewLink, "Version" : "v." NextMajor "." NextMinor}
-                }
-            }
-        }
-        return ""
-    }
-
-    CheckLink(url) {
-        ; Функция проверки доступности ссылки
+    CheckServerVersion(url) {
         try {
-            ; Создаем HTTP запрос
             whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-            whr.Open("HEAD", url, true)
+            whr.Open("GET", url, true)
             whr.Send()
             whr.WaitForResponse()
 
-            ; Проверяем статус ответа (200 = OK)
-            if (whr.Status = 200)
-                return true
-            else
-                return false
+            if (whr.Status = 200) {
+                html := whr.ResponseText
+
+                ; Ищем ссылку перед фразой "Перейти к скачиванию"
+                if RegExMatch(html, "i)href=""([^""]+\.exe)""[^>]*>[^<]*Перейти к скачиванию", match) {
+                    actualLink := match1
+
+                    ; Извлекаем версию из ссылки
+                    if RegExMatch(actualLink, "v\.(\d+\.\d+)\.exe$", verMatch) {
+                        return { "Link" : actualLink, "Version" : "v." . verMatch1 }
+                    }
+                }   
+            }
+        } catch e {
+            ; Ошибка при получении страницы
         }
-        catch {
-            ;MsgBox, 16, World of Tanks : DMod manager, Не удалось проверить ссылку %url%
-            return false
-        }
+        return ""
     }
 
     DownloadFile(url, savePath) {
@@ -255,18 +217,4 @@
             return true
         }
         return false
-    }
-
-;;;;;;;;;; Exit ;;;;;;;;;;
-    BeforeExiting() {
-        global
-        local FilePath := CheckingFiles("File", False, "SavedSettings.ini") 
-        IniWrite, %vDModInServer%, %FilePath%, Main Settings, vDModInServer
-        IniWrite, %vDModTextureInServer%, %FilePath%, Main Settings, vDModTextureInServer
-        IniWrite, %vDMod_LWR%, %FilePath%, Main Settings, vDMod_LWR
-        IniWrite, %vDModTexture_LWR%, %FilePath%, Main Settings, vDModTexture_LWR
-        IniWrite, %vDModInGame%, %FilePath%, Main Settings, vDModInGame
-        IniWrite, %vGame%, %FilePath%, Main Settings, vGame
-        IniWrite, %DMod_TimeStamp%, %FilePath%, Main Settings, DMod_TimeStamp
-        IniWrite, %DModTexture_TimeStamp%, %FilePath%, Main Settings, DModTexture_TimeStamp
     }
