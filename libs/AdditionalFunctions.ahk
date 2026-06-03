@@ -80,7 +80,7 @@
         if (task = "All" || task = "Server") {
             GuiInGame("Edit", (GUI_report ? GUI_report : "CheckVersion"), {"id" : "StatusGUI", "Text" : "Проверка версии модов на сервере"})
             local versionVar, link, result, serverChecks := []
-            serverChecks[1] := { "url": "https://draug.ru/info_sky.html"
+            serverChecks[1] := { "url": "https://evilmod.ru/info_sky.html"
                                , "versionVar": "vDModInServer" 
                                , "Link": "lDModInServer" }
             serverChecks[2] := { "url": "https://draug.ru/texture_pack.html"
