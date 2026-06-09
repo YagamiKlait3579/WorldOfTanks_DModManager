@@ -4,3 +4,4 @@
 .gitignore export-ignore
 .gitkeep export-ignore
 **/.gitkeep export-ignore
+README.md export-ignore
