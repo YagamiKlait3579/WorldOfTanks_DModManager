@@ -1,5 +1,6 @@
 ﻿;;;;;;;;;; Loading ;;;;;;;;;;
     #include %A_Scriptdir%\libs\CoreLibsFor_AHK\BaseLibs\Header.ahk
+    CheckForUpdates("YagamiKlait3579", "WorldOfTanks_DModManager", "main", CheckingFiles("File", False, "Header.ahk"))
     OnExit("BeforeExiting_Menu")
 
 ;;;;;;;;;; Variables ;;;;;;;;;;
